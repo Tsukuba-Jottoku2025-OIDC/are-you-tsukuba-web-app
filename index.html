@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>JWT Demo</title>
+</head>
+<body>
+  <h1>JWT 認証デモ</h1>
+
+  <button onclick="login()">ログイン</button>
+  <button onclick="check()">認証チェック</button>
+
+  <p id="result"></p>
+
+<script>
+const API_BASE = "http://localhost:8000";
+
+async function login() {
+  const res = await fetch(API_BASE + "/auth/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: "admin",
+      password: "password"
+    })
+  });
+  const data = await res.json();
+  localStorage.setItem("token", data.access_token);
+  document.getElementById("result").innerText = "ログイン成功";
+}
+
+async function check() {
+  const token = localStorage.getItem("token");
+  const res = await fetch(API_BASE + "/protected/", {
+    headers: {
+      "Authorization": "Bearer " + token
+    }
+  });
+
+  if (res.ok) {
+    document.getElementById("result").innerText = "認証できています";
+  } else {
+    document.getElementById("result").innerText = "認証失敗";
+  }
+}
+</script>
+</body>
+</html>
