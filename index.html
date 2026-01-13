@@ -110,10 +110,10 @@
         const username = document.getElementById("devUsername").value.trim();
         const role = document.getElementById("devRole").value.trim();
 
-        const res = await fetch("/api/auth/dev-login", {
+        const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, role })
+          body: JSON.stringify({ username, password })
         });
 
         const text = await res.text();
