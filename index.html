@@ -1,48 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8" />
-  <title>JWT Demo</title>
+  <meta charset="UTF-8" />
+  <title>OIDC Wrapper App</title>
 </head>
 <body>
-  <h1>JWT 認証デモ</h1>
+  <h1>OIDC Wrapper Web App</h1>
 
-  <button onclick="login()">ログイン</button>
-  <button onclick="check()">認証チェック</button>
+  <button onclick="login()">Login</button>
+  <button onclick="callApi()">Call Protected API</button>
 
-  <p id="result"></p>
+  <pre id="result"></pre>
 
-<script>
-const API_BASE = "http://localhost:8000";
+  <script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.1/dist/keycloak.min.js"></script>
+  <script>
+    const keycloak = new Keycloak({
+      url: "http://localhost:8080",
+      realm: "are-you-tsukuba",
+      clientId: "frontend"
+    });
 
-async function login() {
-  const res = await fetch(API_BASE + "/auth/login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({
-      username: "admin",
-      password: "password"
-    })
-  });
-  const data = await res.json();
-  localStorage.setItem("token", data.access_token);
-  document.getElementById("result").innerText = "ログイン成功";
-}
-
-async function check() {
-  const token = localStorage.getItem("token");
-  const res = await fetch(API_BASE + "/protected/", {
-    headers: {
-      "Authorization": "Bearer " + token
+    async function login() {
+      // onLoad: 'login-required', flow: 'standard' を指定
+      await keycloak.init({
+        onLoad: 'login-required',
+        checkLoginIframe: false,   // iframe チェック不要
+        pkceMethod: 'S256',        // 推奨PKCE
+        flow: 'standard'
+      });
+      if (!keycloak.authenticated) {
+        keycloak.login();           // 明示的にログイン呼び出し
+      }
     }
-  });
 
-  if (res.ok) {
-    document.getElementById("result").innerText = "認証できています";
-  } else {
-    document.getElementById("result").innerText = "認証失敗";
-  }
-}
-</script>
+
+    async function callApi() {
+      const res = await fetch("http://localhost:8000/protected", {
+        headers: {
+          Authorization: "Bearer " + keycloak.token
+        }
+      });
+
+      document.getElementById("result").textContent =
+        await res.text();
+    }
+  </script>
 </body>
 </html>
