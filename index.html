@@ -15,7 +15,8 @@
   <script src="https://cdn.jsdelivr.net/npm/keycloak-js@25.0.1/dist/keycloak.min.js"></script>
   <script>
     const keycloak = new Keycloak({
-      url: "http://localhost:8080",
+
+      url: "http://153.121.75.6:8080",
       realm: "are-you-tsukuba",
       clientId: "frontend"
     });
@@ -35,15 +36,12 @@
 
 
     async function callApi() {
-      const res = await fetch("http://localhost:8000/protected", {
-        headers: {
-          Authorization: "Bearer " + keycloak.token
-        }
+      const res = await fetch("/api/protected/", {
+        headers: { Authorization: "Bearer " + keycloak.token }
       });
-
-      document.getElementById("result").textContent =
-        await res.text();
+      document.getElementById("result").textContent = await res.text();
     }
+
   </script>
 </body>
 </html>
