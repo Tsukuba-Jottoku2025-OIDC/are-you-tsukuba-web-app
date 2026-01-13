@@ -24,7 +24,6 @@
       <button onclick="callApi()">Call Protected API (Keycloak token)</button>
     </div>
     <p class="muted">
-      ※ Keycloak が使える状態ならこれでOK。Issuer未確定の間は下の「Dev JWT」で疎通確認できます。
     </p>
   </div>
 
@@ -37,11 +36,11 @@
         <input id="devUsername" type="text" value="testuser" />
       </div>
       <div>
-        <label>role</label>
-        <input id="devRole" type="text" value="admin" />
+        <label>password</label>
++       <input id="devPassword" type="text" value="password" />
       </div>
 
-      <button onclick="createDevJwt()">JWTを作成（/api/auth/dev-login）</button>
+      <button onclick="createDevJwt()">JWTを作成（/api/auth/login）</button>
       <button onclick="verifyJwt()">入力JWTを検証（/api/protected/）</button>
       <button onclick="clearResult()">表示をクリア</button>
     </div>
@@ -105,34 +104,31 @@
     }
 
     // 追加：DEV JWT 作成
-    async function createDevJwt() {
-      try {
-        const username = document.getElementById("devUsername").value.trim();
-        const role = document.getElementById("devRole").value.trim();
+    async async function createDevJwt() {
+  try {
+    const username = document.getElementById("devUsername").value.trim() || "admin";
+    const password = document.getElementById("devPassword").value.trim() || "password";
 
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
 
-        const text = await res.text();
+    const obj = await res.json().catch(async () => ({ raw: await res.text() }));
 
-        // JSONとして読めるなら token を取り出す
-        try {
-          const obj = JSON.parse(text);
-          if (obj && obj.access_token) {
-            document.getElementById("jwtInput").value = obj.access_token;
-            log(`[DEV] dev-login -> ${res.status}\n(access_token を入力欄にセットしました)`);
-            return;
-          }
-        } catch (_) {}
-
-        log(`[DEV] dev-login -> ${res.status}\n${text}`);
-      } catch (e) {
-        log("[DEV] error: " + String(e));
-      }
+    if (res.ok && obj && obj.access_token) {
+      document.getElementById("jwtInput").value = obj.access_token;
+      log(`[DEV] /api/auth/login -> ${res.status}\n(access_token を入力欄にセットしました)`);
+      return;
     }
+
+    log(`[DEV] /api/auth/login -> ${res.status}\n${JSON.stringify(obj, null, 2)}`);
+  } catch (e) {
+    log("[DEV] error: " + String(e));
+  }
+}
+
 
     // 追加：入力JWTの検証（= protected を叩く）
     async function verifyJwt() {
